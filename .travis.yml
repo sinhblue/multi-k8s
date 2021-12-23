@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t sinhblue/react-test -f ./client/Dockerfile.dev ./client
+ 
+script:
+  - docker run -e CI=true sinhblue/react-test npm test 
+
+after_success:
+  - docker build -t sinhblue/multi-client ./client
+  - docker build -t sinhblue/multi-nginx ./nginx
+  - docker build -t sinhblue/multi-server ./server
+  - docker build -t sinhblue/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push to docker hub  
+  - docker push sinhblue/multi-client
+  - docker push sinhblue/multi-nginx
+  - docker push sinhblue/multi-server
+  - docker push sinhblue/multi-worker
